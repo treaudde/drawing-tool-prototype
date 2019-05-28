@@ -2,10 +2,11 @@ import {fabric} from "FabricJS";
 import $ from "jQuery";
 import Zoom from "./zoom.js"
 import Pan from "./pan.js"
+import DrawLine from "./draw-line.js";
 
 let initDrawingToolPrototype = () => {
     const canvas =  new fabric.Canvas('c');
-    let imagePath = 'https://www.saint-joseph.org/wp-content/uploads/2019/02/OSJMR-grand-projet-amenagement-2019-header.jpg';
+    let imagePath = 'img/OSJMR-grand-projet-amenagement-2019-header.jpg';
 
     //set up zoom
     const zoomObject = new Zoom(canvas, {
@@ -16,8 +17,12 @@ let initDrawingToolPrototype = () => {
         scaleFactor: 1.1
     });
 
+
     //set up Pan
     const panObject = new Pan(canvas, {panControl: 'pan-mode'});
+
+    //set up drawing
+    const drawingObject = new DrawLine(canvas, {drawingControl: 'drawing-mode'});
 
     fabric.Image
         .fromURL(
@@ -25,15 +30,21 @@ let initDrawingToolPrototype = () => {
             (oImg) => {
                 oImg.set({
                     top: 0,
-                    left: 0
+                    left: 0,
+                    class: 'loaded-image', //this is a property we set
+                    selectable: false
                 });
-                oImg.set('selectable', false);
 
                 canvas.setWidth(oImg.width);
                 canvas.setHeight(oImg.height);
                 canvas.add(oImg);
+
+
+                //draw the lines
+                drawingObject.drawLine();
             }
         )
+
 }
 
 

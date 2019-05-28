@@ -7,7 +7,8 @@ export default class Zoom {
     constructor(canvas, config) {
         this.ZOOM_MAX = config.zoomMax;
         this.SCALE_FACTOR = config.scaleFactor;
-        this.canvas = canvas;
+        this.canvas = canvas
+
 
         //set up the elements
         $('#' + config.zoomInTrigger).click(() => {

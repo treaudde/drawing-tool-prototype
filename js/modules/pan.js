@@ -34,7 +34,28 @@ export default class Pan {
             this.panMode = !this.panMode;
             this.canvas.selection = !this.panMode;
             (this.panMode == true) ? $('#pan-status').html('(On)') :
-            $('#pan-status').html('(Off)')
+            $('#pan-status').html('(Off)');
+
+            (this.panMode == true) ? this.disableObjectSelection() : this.enableObjectSelection();
+        })
+    }
+
+    /**
+     * Since we are moving the canvas we don't want individual elements moving
+     */
+    disableObjectSelection() {
+        this.canvas.getObjects().forEach((element) => {
+            if(element.class != 'loadaed-image') {
+                element.set('selectable', false);
+            }
+        })
+    }
+
+    enableObjectSelection() {
+        this.canvas.getObjects().forEach((element) => {
+            if(element.class != 'loadaed-image') {
+                element.set('selectable', true);
+            }
         })
     }
 
