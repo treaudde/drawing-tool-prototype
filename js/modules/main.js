@@ -38,10 +38,6 @@ let initDrawingToolPrototype = () => {
                 canvas.setWidth(oImg.width);
                 canvas.setHeight(oImg.height);
                 canvas.add(oImg);
-
-
-                //draw the lines
-                drawingObject.drawLine();
             }
         )
 
