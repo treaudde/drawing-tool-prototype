@@ -1,5 +1,6 @@
 import {fabric} from "FabricJS";
 import $ from "jQuery";
+import {canvasSelectionUtilities} from "../helpers/canvas-utilities.js";
 
 
 export default class Pan {
@@ -36,26 +37,8 @@ export default class Pan {
             (this.panMode == true) ? $('#pan-status').html('(On)') :
             $('#pan-status').html('(Off)');
 
-            (this.panMode == true) ? this.disableObjectSelection() : this.enableObjectSelection();
-        })
-    }
-
-    /**
-     * Since we are moving the canvas we don't want individual elements moving
-     */
-    disableObjectSelection() {
-        this.canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
-                element.set('selectable', false);
-            }
-        })
-    }
-
-    enableObjectSelection() {
-        this.canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
-                element.set('selectable', true);
-            }
+            (this.panMode == true) ? canvasSelectionUtilities.disableObjectSelection(this.canvas)
+                : canvasSelectionUtilities.enableObjectSelection(this.canvas);
         })
     }
 

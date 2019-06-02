@@ -1,5 +1,7 @@
+//based on example: https://codepen.io/durga598/pen/gXQjdw
 import {fabric} from "FabricJS";
 import $ from "jQuery";
+import {canvasSelectionUtilities} from "../helpers/canvas-utilities.js";
 
 export default class DrawLine {
     constructor(canvas, config) {
@@ -7,7 +9,15 @@ export default class DrawLine {
         this.canvas = canvas;
         this.lines = [];
         this.activeLine = null;
-        this.drawingLine = false;
+        this.max = 99999;
+        this.min = 99;
+
+
+        this.pointArray = new Array();
+        this.lineArray = new Array();
+
+        this.persistedPoints = new Array();
+        this.persistedLines = new Array();
 
         //set up pan control
         $('#' + config.drawingControl).click(() => {
@@ -16,20 +26,34 @@ export default class DrawLine {
             (this.drawingMode == true) ? $('#drawing-status').html('(On)') :
                 $('#drawing-status').html('(Off)');
 
-            (this.drawingMode == true) ? this.disableObjectSelection() : this.enableObjectSelection();
-        })
+            (this.drawingMode == true) ? canvasSelectionUtilities.disableObjectSelection(this.canvas)
+                : canvasSelectionUtilities.enableObjectSelection(this.canvas);
 
-        this.canvas.on('mouse:down', (e) => {
-            if (this.drawingMode) {
-                let pointer = this.canvas.getPointer(e);
-                this.activeLine  = this.startLine(pointer);
+            if(this.drawingMode == false) {//remove the active line
+                this.canvas.remove(this.activeLine);
+                this.pointArray = this.lineArray = [];
             }
         })
 
-        this.canvas.on('mouse:move', (e) => {
-            if (this.drawingMode && this.drawingLine) {
-                let pointer = this.canvas.getPointer(e);
-                this.drawLine(pointer);
+        this.canvas.on('mouse:down', (options) => {
+            if(this.drawingMode) {
+                // if(options.target
+                //     && this.pointArray.length > 0
+                //     && options.target.id == this.pointArray[0].id
+                //     && options.target.class == 'point'){
+                //     this.completeDrawing(options);
+                // }
+                // else {
+                    this.addPoint(options);
+                // }
+            }
+        })
+
+        this.canvas.on('mouse:move', (options) => {
+            if (this.drawingMode && this.activeLine && this.activeLine.class == "line") {
+                let pointer = this.canvas.getPointer(options.e);
+                this.activeLine.set({ x2: pointer.x, y2: pointer.y });
+                this.canvas.renderAll();
             }
         })
 
@@ -40,109 +64,102 @@ export default class DrawLine {
         // })
     }
 
-    startLine(pointer) {
-        this.drawingLine = true;
-        let point = new fabric.Circle({
+    addPoint(options) {
+        let circle = this.makeCircle(options);
+        if(this.pointArray.length == 0){
+            circle.set({
+                fill:'red'
+            })
+        }
+
+        let line = this.makeLine(options);
+
+        this.activeLine = line;
+
+        this.pointArray.push(circle);
+        this.lineArray.push(line);
+
+        this.canvas.add(line);
+        this.canvas.add(circle);
+    }
+
+    //can be used for snapping functionality
+    // completeDrawing(options) {
+    //     let circleCenterPoint = options.target.getCenterPoint();
+    //     this.activeLine.set({
+    //         x2: circleCenterPoint.x,
+    //         y2: circleCenterPoint.y
+    //     });
+    //     this.lineArray.push(this.activeLine);
+    //
+    //     this.canvas.renderAll();
+    //     this.remove
+    //
+    //     this.pointArray.forEach((point) => {
+    //         this.persistedPoints.push(point);
+    //     });
+    //
+    //     this.lineArray.forEach((line) => {
+    //         this.persistedLines.push(line);
+    //     });
+    //
+    //     //clear for the next image
+    //     this.pointArray = [];
+    //     this.lineArray = [];
+    //
+    //     console.log(this.persistedPoints);
+    //     console.log(this.persistedLines);
+    // }
+
+    makeCircle(options) {
+        let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
+        let id = new Date().getTime() + random;
+        let circle = new fabric.Circle({
             radius: 5,
-            fill: '#ff0000',
-            strokeWidth: 1,
-            left: (pointer.x / this.canvas.getZoom()),
-            top: (pointer.y / this.canvas.getZoom()),
-            selectable: false,
+            fill: '#ffffff',
+            stroke: '#333333',
+            strokeWidth: 0.5,
+            left: (options.e.layerX/this.canvas.getZoom()),
+            top: (options.e.layerY/this.canvas.getZoom()),
             hasBorders: false,
             hasControls: false,
             originX:'center',
             originY:'center',
+            id:id,
+            objectCaching:false,
             class: 'point'
         });
 
-        let initialPoint  = new fabric.Point(pointer.x, pointer.y);
+        circle.on('selected', this.determineConnectedLines);
+        return circle;
+    }
 
-        let line = new fabric.Polyline([initialPoint, initialPoint], {
+    makeLine(options) {
+        let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
+        let id = new Date().getTime() + random;
+
+        let points = [
+            (options.e.layerX/this.canvas.getZoom()),
+            (options.e.layerY/this.canvas.getZoom()),
+            (options.e.layerX/this.canvas.getZoom()),
+            (options.e.layerY/this.canvas.getZoom())
+        ];
+
+         return new fabric.Line(points, {
             strokeWidth: 2,
-            fill: '#000000',
-            stroke: '#000000',
+            fill: '#999999',
+            stroke: '#999999',
             class:'line',
             originX:'center',
             originY:'center',
-            selectable: false,
             hasBorders: false,
             hasControls: false,
-            objectCaching:false
+            objectCaching:false,
+            id: id
         });
-
-        this.canvas.add(line);
-        this.canvas.add(point);
-
-        this.activeLine = line;
-        console.log(this.activeLine);
     }
 
-    drawLine(pointer) {
-        //console.log(this.activeLine);
-       let points =  this.activeLine.get('points');
-       let currentPoint = new fabric.Point(pointer.x, pointer.y);
-       this.activeLine.set('points', [points[0], currentPoint]);
-       this.canvas.renderAll();
-    }
-
-    endLine(pointer) {
-        this.drawingLine  = false;
-    }
-
-    /**
-     * Since we are moving the canvas we don't want individual elements moving
-     */
-    disableObjectSelection() {
-        this.canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
-                element.set('selectable', false);
-            }
-        })
-    }
-
-    enableObjectSelection() {
-        this.canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
-                element.set('selectable', true);
-            }
-        })
+    determineConnectedLines(options){
+        console.log(options);
     }
 }
-
-//add a line
-// let polylinePoints = [
-//     new fabric.Point(50, 10),
-//     new fabric.Point(500, 10),
-//     new fabric.Point(500, 500),
-//     new fabric.Point(50, 500),
-//     new fabric.Point(50, 10)
-// ];
-//
-//
-// let line = new fabric.Polyline(polylinePoints, {
-//     stroke: true,
-//     strokeWidth: 5,
-//     color:'black',
-//     fill: 'transparent',
-//     class: 'polyline'
-// })
-//
-// polylinePoints.forEach((point) => {
-//     this.canvas.add(new fabric.Circle({
-//         radius: 7,
-//         fill: '#f3f702',
-//         strokeWidth: 1,
-//         left: (point.x / this.canvas.getZoom()),
-//         top: (point.y / this.canvas.getZoom()),
-//         selectable: false,
-//         hasBorders: false,
-//         hasControls: false,
-//         originX:'center',
-//         originY:'center',
-//         class: 'circle'
-//     }));
-// })
-//
-// this.canvas.add(line);
-// console.log(line);
