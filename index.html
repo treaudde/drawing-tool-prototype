@@ -10,15 +10,32 @@
             padding:0;
             overflow: hidden;
         }
+
+        #c{
+            position:relative
+        }
+
+        #menu {
+            height:200px;
+            background-color: #dcdad0;
+            overflow:scroll;
+            z-index:200;
+            position:absolute
+        }
+
     </style>
 </head>
 <body>
 <div id="menu">
-    <a href="#" id="zoom-in">Zoom In</a>
-    <a href="#" id="zoom-out">Zoom Out</a>
-    <a href="#" id="reset-zoom">Reset Zoom</a>
-    <a href="#" id="pan-mode">Pan <span id="pan-status">(Off)</span></a>
-    <a href="#" id="drawing-mode">Drawing Mode <span id="drawing-status">(Off)</span></a>
+    <p>
+        <a href="#" id="zoom-in">Zoom In</a>
+        <a href="#" id="zoom-out">Zoom Out</a>
+        <a href="#" id="reset-zoom">Reset Zoom</a>
+        <a href="#" id="pan-mode">Pan <span id="pan-status">(Off)</span></a>
+        <a href="#" id="drawing-mode">Drawing Mode <span id="drawing-status">(Off)</span></a>
+    </p>
+    <hr />
+    <span id="information"></span>
 </div>
 <canvas id="c"></canvas>
 

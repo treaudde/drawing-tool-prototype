@@ -1,7 +1,7 @@
 export let canvasSelectionUtilities = {
     disableObjectSelection: (canvas) => {
         canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
+            if(element.class != 'loaded-image') {
                 element.set('selectable', false);
             }
         })
@@ -9,7 +9,7 @@ export let canvasSelectionUtilities = {
 
     enableObjectSelection: (canvas) => {
         canvas.getObjects().forEach((element) => {
-            if(element.class != 'loadaed-image') {
+            if(element.class != 'loaded-image') {
                 element.set('selectable', true);
             }
         })

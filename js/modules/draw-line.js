@@ -31,7 +31,17 @@ export default class DrawLine {
 
             if(this.drawingMode == false) {//remove the active line
                 this.canvas.remove(this.activeLine);
+                //persist the points and the lines
+                this.pointArray.forEach((point) => {
+                    this.persistedPoints.push(point);
+                })
+
+                this.lineArray.forEach((line) => {
+                    this.persistedLines.push(line);
+                })
+
                 this.pointArray = this.lineArray = [];
+                console.log(this.persistedPoints, this.persistedLines);
             }
         })
 
@@ -56,22 +66,10 @@ export default class DrawLine {
                 this.canvas.renderAll();
             }
         })
-
-        // this.canvas.on('mouse:up', (e) => {
-        //     if (this.drawingMode) {
-        //
-        //     }
-        // })
     }
 
     addPoint(options) {
         let circle = this.makeCircle(options);
-        if(this.pointArray.length == 0){
-            circle.set({
-                fill:'red'
-            })
-        }
-
         let line = this.makeLine(options);
 
         this.activeLine = line;
@@ -115,7 +113,7 @@ export default class DrawLine {
         let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
         let id = new Date().getTime() + random;
         let circle = new fabric.Circle({
-            radius: 5,
+            radius: 10,
             fill: '#ffffff',
             stroke: '#333333',
             strokeWidth: 0.5,
@@ -125,12 +123,13 @@ export default class DrawLine {
             hasControls: false,
             originX:'center',
             originY:'center',
+            lockMovementX: true,
+            lockMovementY: true,
             id:id,
             objectCaching:false,
             class: 'point'
         });
 
-        circle.on('selected', this.determineConnectedLines);
         return circle;
     }
 
@@ -145,21 +144,86 @@ export default class DrawLine {
             (options.e.layerY/this.canvas.getZoom())
         ];
 
-         return new fabric.Line(points, {
-            strokeWidth: 2,
-            fill: '#999999',
-            stroke: '#999999',
+         let line = new fabric.Line(points, {
+            strokeWidth: 4,
+            fill: '#000000',
+            stroke: '#000000',
             class:'line',
             originX:'center',
             originY:'center',
             hasBorders: false,
             hasControls: false,
             objectCaching:false,
-            id: id
+            lineData: {},
+            id: id,
+            lockMovementX: true,
+            lockMovementY: true,
+
         });
+
+        line.on('mousedown', (options) => {
+            let selectedLine = options.target;
+            selectedLine.set('stroke', '#b22ba4');
+            this.displayLineInformation(selectedLine);
+        });
+
+        return line;
     }
 
-    determineConnectedLines(options){
-        console.log(options);
+    //this is just a method for the prototype
+    displayLineInformation(line) {
+
+        $('BODY').off('click', '#dismiss-data-'+line.id);
+        $('BODY').off('click', '#add-data-'+line.id);
+        $('BODY').off('click', '#delete-data-'+line.id);
+
+        let htmlString = `
+                <p><strong>Line ID:</strong> ${line.id}</p>
+        `;
+
+        if (typeof line.lineData.data != 'undefined') {
+            htmlString += `
+                <p><strong>Line Data:</strong> ${line.lineData.data}</p>
+            `;
+        }
+
+        htmlString += `
+                <p><a href="#" id="add-data-${line.id}" style="font-size: 10px;">Add Data</a></p>
+        `
+        if (typeof line.lineData.data != 'undefined') {
+            htmlString += `
+                <p><a href="#" id="clear-data-${line.id}" style="font-size: 10px;">Clear Data</a></p>
+            `
+        }
+        htmlString += `
+                <p><a href="#" id="dismiss-data-${line.id}" style="font-size: 10px;">Dismiss</a></p>
+        `
+        $('#information').html(htmlString);
+
+        //set up event listeners for this line
+        $('BODY').on('click', '#dismiss-data-'+line.id, () => {
+            $('#information').html('');
+            $('BODY').off('click', '#dismiss-data-'+line.id);
+            $('BODY').off('click', '#add-data-'+line.id);
+            $('BODY').off('click', '#delete-data-'+line.id);
+        })
+
+        //set up event listeners for this line
+        $('BODY').on('click', '#add-data-'+line.id, () => {
+            let dataToAdd = prompt('Add Data:', 'insert data here');
+            line.lineData.data = dataToAdd;
+            this.displayLineInformation(line);
+        })
+
+        //set up event listeners for this line
+        $('BODY').on('click', '#clear-data-'+line.id, () => {
+
+            if (confirm('Are you sure?')) {
+                delete line.lineData.data;
+                this.displayLineInformation(line);
+            }
+        })
+
     }
+
 }

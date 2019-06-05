@@ -8,6 +8,7 @@ let initDrawingToolPrototype = () => {
     const canvas =  new fabric.Canvas('c');
     let imagePath = 'img/OSJMR-grand-projet-amenagement-2019-header.jpg';
 
+
     //set up zoom
     const zoomObject = new Zoom(canvas, {
         zoomInTrigger: 'zoom-in',
@@ -40,7 +41,6 @@ let initDrawingToolPrototype = () => {
                 canvas.add(oImg);
             }
         )
-
 }
 
 
