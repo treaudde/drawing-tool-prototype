@@ -48,7 +48,7 @@ export default class Pan {
             let currentTop = Number(elementValue.css("top").replace(/[^\d\.\-]/g, '') );
             let currentLeft = Number(elementValue.css("left").replace(/[^\d\.\-]/g, '') );
 
-            console.log("panToByMouseCoords:: (currentTop, yDelta): (" + currentTop + ", " + yDelta +")" +", (currentLeft, xDelta): (" + currentLeft + ", " + xDelta +")");
+            //console.log("panToByMouseCoords:: (currentTop, yDelta): (" + currentTop + ", " + yDelta +")" +", (currentLeft, xDelta): (" + currentLeft + ", " + xDelta +")");
 
             currentTop = this.zoomCalcYpos(currentTop + yDelta);
             currentLeft = this.zoomCalcXpos(currentLeft + xDelta);

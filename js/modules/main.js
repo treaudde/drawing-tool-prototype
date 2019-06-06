@@ -3,11 +3,11 @@ import $ from "jQuery";
 import Zoom from "./zoom.js"
 import Pan from "./pan.js"
 import DrawLine from "./draw-line.js";
+import MovePoint from "./move-point.js";
 
 let initDrawingToolPrototype = () => {
     const canvas =  new fabric.Canvas('c');
-    let imagePath = 'img/OSJMR-grand-projet-amenagement-2019-header.jpg';
-
+    let imagePath = 'img/roof.jpeg';
 
     //set up zoom
     const zoomObject = new Zoom(canvas, {
@@ -24,6 +24,8 @@ let initDrawingToolPrototype = () => {
 
     //set up drawing
     const drawingObject = new DrawLine(canvas, {drawingControl: 'drawing-mode'});
+
+    const pointModeObject = new MovePoint(canvas, drawingObject, {pointControl:'point-mode'})
 
     fabric.Image
         .fromURL(

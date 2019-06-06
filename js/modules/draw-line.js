@@ -30,18 +30,7 @@ export default class DrawLine {
                 : canvasSelectionUtilities.enableObjectSelection(this.canvas);
 
             if(this.drawingMode == false) {//remove the active line
-                this.canvas.remove(this.activeLine);
-                //persist the points and the lines
-                this.pointArray.forEach((point) => {
-                    this.persistedPoints.push(point);
-                })
-
-                this.lineArray.forEach((line) => {
-                    this.persistedLines.push(line);
-                })
-
-                this.pointArray = this.lineArray = [];
-                console.log(this.persistedPoints, this.persistedLines);
+               this.processDrawing();
             }
         })
 
@@ -66,6 +55,37 @@ export default class DrawLine {
                 this.canvas.renderAll();
             }
         })
+    }
+
+    processDrawing() {
+        this.canvas.remove(this.activeLine);
+        //persist the points and the lines
+        this.pointArray.forEach((point) => {
+            this.persistedPoints.push(point);
+        })
+
+        this.lineArray.forEach((line) => {
+            this.persistedLines.push(line);
+        })
+
+        //calculate point line intersections for moving points
+        this.pointArray.forEach((point) => {
+            //get the center point of the circle as it corresponds to one end a line
+            let centerPoint = point.getCenterPoint();
+            for (let x = 0; x<this.lineArray.length; x++) {
+                let line = this.lineArray[x];
+
+                if (line.x1 == centerPoint.x && line.y1 == centerPoint.y) {
+                    point.set('lineX1Y1', line);
+                }
+
+                if (line.x2 == centerPoint.x && line.y2 == centerPoint.y) {
+                    point.set('lineX2Y2', line);
+                }
+            }
+        });
+
+        this.pointArray = this.lineArray = [];
     }
 
     addPoint(options) {
@@ -113,7 +133,7 @@ export default class DrawLine {
         let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
         let id = new Date().getTime() + random;
         let circle = new fabric.Circle({
-            radius: 10,
+            radius: 20,
             fill: '#ffffff',
             stroke: '#333333',
             strokeWidth: 0.5,
@@ -127,8 +147,15 @@ export default class DrawLine {
             lockMovementY: true,
             id:id,
             objectCaching:false,
-            class: 'point'
+            class: 'point',
+            lineX1Y1: null,
+            lineX2Y2: null,
         });
+
+        circle.on('mousedown',(options) => {
+            let selectedCircle = options.target;
+            this.displayCircleInformation(selectedCircle);
+        })
 
         return circle;
     }
@@ -145,7 +172,7 @@ export default class DrawLine {
         ];
 
          let line = new fabric.Line(points, {
-            strokeWidth: 4,
+            strokeWidth: 8,
             fill: '#000000',
             stroke: '#000000',
             class:'line',
@@ -163,7 +190,6 @@ export default class DrawLine {
 
         line.on('mousedown', (options) => {
             let selectedLine = options.target;
-            selectedLine.set('stroke', '#b22ba4');
             this.displayLineInformation(selectedLine);
         });
 
@@ -179,6 +205,7 @@ export default class DrawLine {
 
         let htmlString = `
                 <p><strong>Line ID:</strong> ${line.id}</p>
+                <p><strong>Coords:</strong> (${line.x1}, ${line.y1}) (${line.x2}, ${line.y2})</p>
         `;
 
         if (typeof line.lineData.data != 'undefined') {
@@ -223,7 +250,27 @@ export default class DrawLine {
                 this.displayLineInformation(line);
             }
         })
-
     }
 
+    displayCircleInformation(circle) {
+        $('BODY').off('click', '#dismiss-data-'+circle.id);
+
+        let htmlString = `
+                <p><strong>Circle ID:</strong> ${circle.id}</p>
+                <p><strong>Coords:</strong> (${circle.getCenterPoint().x}, ${circle.getCenterPoint().y})</p>
+        `;
+
+        htmlString += `
+                <p><a href="#" id="dismiss-data-${circle.id}" style="font-size: 10px;">Dismiss</a></p>
+        `
+        $('#information').html(htmlString);
+
+        //set up event listeners for this line
+        $('BODY').on('click', '#dismiss-data-'+circle.id, () => {
+            $('#information').html('');
+            $('BODY').off('click', '#dismiss-data-'+circle.id);
+
+        })
+
+    }
 }
