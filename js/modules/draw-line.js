@@ -29,8 +29,8 @@ export default class DrawLine {
             (this.drawingMode == true) ? canvasSelectionUtilities.disableObjectSelection(this.canvas)
                 : canvasSelectionUtilities.enableObjectSelection(this.canvas);
 
-            if(this.drawingMode == false) {//remove the active line
-               this.processDrawing();
+            if(this.drawingMode == false) { //process the canvas
+                this.processDrawing();
             }
         })
 
@@ -65,27 +65,37 @@ export default class DrawLine {
         })
 
         this.lineArray.forEach((line) => {
-            this.persistedLines.push(line);
+            if(line.id != this.activeLine.id) {
+                this.persistedLines.push(line);
+            }
         })
 
         //calculate point line intersections for moving points
-        this.pointArray.forEach((point) => {
+        this.persistedPoints.forEach((point) => {
             //get the center point of the circle as it corresponds to one end a line
             let centerPoint = point.getCenterPoint();
-            for (let x = 0; x<this.lineArray.length; x++) {
-                let line = this.lineArray[x];
+            for (let x = 0; x<this.persistedLines.length; x++) {
+                let line = this.persistedLines[x];
 
+                if(line.id === this.activeLine.id) {
+                    console.log('yes active line');
+                    delete this.persistedLines[x];
+                    continue;
+                }
                 if (line.x1 == centerPoint.x && line.y1 == centerPoint.y) {
+                    console.log('yes line 1');
                     point.set('lineX1Y1', line);
                 }
 
                 if (line.x2 == centerPoint.x && line.y2 == centerPoint.y) {
+                    console.log('yes line 2');
                     point.set('lineX2Y2', line);
                 }
             }
         });
 
         this.pointArray = this.lineArray = [];
+        this.activeLine = null;
     }
 
     addPoint(options) {
@@ -199,6 +209,7 @@ export default class DrawLine {
     //this is just a method for the prototype
     displayLineInformation(line) {
 
+        console.log(line);
         $('BODY').off('click', '#dismiss-data-'+line.id);
         $('BODY').off('click', '#add-data-'+line.id);
         $('BODY').off('click', '#delete-data-'+line.id);
@@ -253,6 +264,7 @@ export default class DrawLine {
     }
 
     displayCircleInformation(circle) {
+        console.log(circle);
         $('BODY').off('click', '#dismiss-data-'+circle.id);
 
         let htmlString = `

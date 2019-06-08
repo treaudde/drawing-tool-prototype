@@ -41,13 +41,13 @@ export default class MovePoint {
 
     movePoint(point) {
         if(point.lineX1Y1 != null) {
-            point.lineX1Y1.x1 = point.getCenterPoint().x;
-            point.lineX1Y1.y1 = point.getCenterPoint().y;
+            point.lineX1Y1.set('x1', point.getCenterPoint().x);
+            point.lineX1Y1.set('y1', point.getCenterPoint().y);
         }
 
         if(point.lineX2Y2 != null) {
-            point.lineX2Y2.x2 = point.getCenterPoint().x;
-            point.lineX2Y2.y2 = point.getCenterPoint().y;
+            point.lineX2Y2.set('x2', point.getCenterPoint().x);
+            point.lineX2Y2.set('y2', point.getCenterPoint().y);
         }
         this.canvas.renderAll();
     }
