@@ -70,32 +70,37 @@ export default class DrawLine {
             }
         })
 
+        this.calculatePointLineIntersections();
+
+        this.pointArray = this.lineArray = [];
+        this.activeLine = null;
+    }
+
+
+    calculatePointLineIntersections() {
         //calculate point line intersections for moving points
         this.persistedPoints.forEach((point) => {
+            point.set('lineX1Y1', null);
+            point.set('lineX2Y2', null);
+
             //get the center point of the circle as it corresponds to one end a line
             let centerPoint = point.getCenterPoint();
             for (let x = 0; x<this.persistedLines.length; x++) {
                 let line = this.persistedLines[x];
 
-                if(line.id === this.activeLine.id) {
-                    console.log('yes active line');
-                    delete this.persistedLines[x];
+                if(this.activeLine !== null && line.id === this.activeLine.id) {
+                    this.persistedLines.splice(x,1);
                     continue;
                 }
                 if (line.x1 == centerPoint.x && line.y1 == centerPoint.y) {
-                    console.log('yes line 1');
                     point.set('lineX1Y1', line);
                 }
 
                 if (line.x2 == centerPoint.x && line.y2 == centerPoint.y) {
-                    console.log('yes line 2');
                     point.set('lineX2Y2', line);
                 }
             }
         });
-
-        this.pointArray = this.lineArray = [];
-        this.activeLine = null;
     }
 
     addPoint(options) {
@@ -203,7 +208,45 @@ export default class DrawLine {
             this.displayLineInformation(selectedLine);
         });
 
+        // line.on('selected', (options) => {
+        //     // let selectedLine = options.target;
+        //     // selectedLine.set('fill', 'red');
+        //     // selectedLine.set('stroke', 'red');
+        //     //console.log(options.selected[0]);
+        // });
+        //
+        // line.on('deselected', (options) => {
+        //     // console.log(options.deselected[0]);
+        //     // let selectedLine = options.target;
+        //     // selectedLine.set('fill', '#000000');
+        //     // selectedLine.set('stroke', '#000000');
+        // });
+
         return line;
+    }
+
+
+    //delete line
+    deleteLine(line) {
+        this.canvas.remove(line);
+        this.persistedLines.splice(this.persistedLines.indexOf(line),1);
+        this.calculatePointLineIntersections();
+        this.removePoints();
+        //call twice because of quirkniness - should not have to do this
+        this.removePoints();
+    }
+
+    removePoints() {
+        //delete any straggling points
+        this.persistedPoints.forEach((point, index) => {
+            if(point.lineX1Y1 == null && point.lineX2Y2 == null) {
+                console.log('point removed - ' + point.id);
+                this.canvas.remove(point);
+                this.persistedPoints.splice(index,1);
+            }
+        });
+
+        this.canvas.renderAll();
     }
 
     //this is just a method for the prototype
@@ -213,6 +256,7 @@ export default class DrawLine {
         $('BODY').off('click', '#dismiss-data-'+line.id);
         $('BODY').off('click', '#add-data-'+line.id);
         $('BODY').off('click', '#delete-data-'+line.id);
+        $('BODY').off('click', '#delete-line-'+line.id);
 
         let htmlString = `
                 <p><strong>Line ID:</strong> ${line.id}</p>
@@ -226,16 +270,21 @@ export default class DrawLine {
         }
 
         htmlString += `
-                <p><a href="#" id="add-data-${line.id}" style="font-size: 10px;">Add Data</a></p>
+                <p><a href="#" id="add-data-${line.id}" style="font-size: 12px;">Add Data</a></p>
         `
         if (typeof line.lineData.data != 'undefined') {
             htmlString += `
-                <p><a href="#" id="clear-data-${line.id}" style="font-size: 10px;">Clear Data</a></p>
+                <p><a href="#" id="clear-data-${line.id}" style="font-size: 12px;">Clear Data</a></p>
             `
         }
         htmlString += `
-                <p><a href="#" id="dismiss-data-${line.id}" style="font-size: 10px;">Dismiss</a></p>
+                <p><a href="#" id="dismiss-data-${line.id}" style="font-size: 12px;">Dismiss</a></p>
         `
+
+        htmlString += `
+                <p><a href="#" id="delete-line-${line.id}" style="font-size: 12px;">Delete Line</a></p>
+        `
+
         $('#information').html(htmlString);
 
         //set up event listeners for this line
@@ -244,6 +293,7 @@ export default class DrawLine {
             $('BODY').off('click', '#dismiss-data-'+line.id);
             $('BODY').off('click', '#add-data-'+line.id);
             $('BODY').off('click', '#delete-data-'+line.id);
+            $('BODY').off('click', '#delete-line-'+line.id);
         })
 
         //set up event listeners for this line
@@ -260,6 +310,15 @@ export default class DrawLine {
                 delete line.lineData.data;
                 this.displayLineInformation(line);
             }
+            return false;
+        })
+
+        //set up event listeners for this line
+        $('BODY').on('click', '#delete-line-'+line.id, () => {
+            if (confirm('Are you sure?')) {
+                this.deleteLine(line);
+            }
+            return false;
         })
     }
 
@@ -273,7 +332,7 @@ export default class DrawLine {
         `;
 
         htmlString += `
-                <p><a href="#" id="dismiss-data-${circle.id}" style="font-size: 10px;">Dismiss</a></p>
+                <p><a href="#" id="dismiss-data-${circle.id}" style="font-size: 12px;">Dismiss</a></p>
         `
         $('#information').html(htmlString);
 
