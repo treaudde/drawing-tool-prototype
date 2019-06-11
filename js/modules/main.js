@@ -15,8 +15,14 @@ let initDrawingToolPrototype = () => {
         zoomOutTrigger: 'zoom-out',
         zoomResetTrigger: 'reset-zoom',
         zoomMax: 20,
-        scaleFactor: 1.1
+        scaleFactor: 1.001
     });
+
+    //fix the selectability of lines, seems to work after a zoom
+    setInterval(() => {
+        zoomObject.zoomInCanvas();
+        zoomObject.zoomOutCanvas();
+    }, 2000)
 
 
     //set up Pan

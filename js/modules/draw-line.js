@@ -51,7 +51,7 @@ export default class DrawLine {
         this.canvas.on('mouse:move', (options) => {
             if (this.drawingMode && this.activeLine && this.activeLine.class == "line") {
                 let pointer = this.canvas.getPointer(options.e);
-                this.activeLine.set({ x2: pointer.x, y2: pointer.y });
+                this.activeLine.set({ x2: Math.floor(pointer.x), y2: Math.floor(pointer.y) });
                 this.canvas.renderAll();
             }
         })
@@ -70,10 +70,17 @@ export default class DrawLine {
             }
         })
 
+        console.log(this.pointArray, this.lineArray);
+
         this.calculatePointLineIntersections();
 
-        this.pointArray = this.lineArray = [];
+        console.log(this.persistedPoints);
+        console.log(this.persistedLines);
+
+        this.pointArray = [];
+        this.lineArray = [];
         this.activeLine = null;
+        this.canvas.renderAll();
     }
 
 
@@ -148,12 +155,12 @@ export default class DrawLine {
         let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
         let id = new Date().getTime() + random;
         let circle = new fabric.Circle({
-            radius: 20,
+            radius: 10,
             fill: '#ffffff',
             stroke: '#333333',
             strokeWidth: 0.5,
-            left: (options.e.layerX/this.canvas.getZoom()),
-            top: (options.e.layerY/this.canvas.getZoom()),
+            left: Math.floor(options.e.layerX/this.canvas.getZoom()),
+            top: Math.floor(options.e.layerY/this.canvas.getZoom()),
             hasBorders: false,
             hasControls: false,
             originX:'center',
@@ -180,10 +187,10 @@ export default class DrawLine {
         let id = new Date().getTime() + random;
 
         let points = [
-            (options.e.layerX/this.canvas.getZoom()),
-            (options.e.layerY/this.canvas.getZoom()),
-            (options.e.layerX/this.canvas.getZoom()),
-            (options.e.layerY/this.canvas.getZoom())
+            (Math.floor(options.e.layerX/this.canvas.getZoom())),
+            (Math.floor(options.e.layerY/this.canvas.getZoom())),
+            (Math.floor(options.e.layerX/this.canvas.getZoom())),
+            (Math.floor(options.e.layerY/this.canvas.getZoom()))
         ];
 
          let line = new fabric.Line(points, {
@@ -233,6 +240,7 @@ export default class DrawLine {
         this.calculatePointLineIntersections();
         this.removePoints();
         //call twice because of quirkniness - should not have to do this
+        this.calculatePointLineIntersections();
         this.removePoints();
     }
 
@@ -251,7 +259,6 @@ export default class DrawLine {
 
     //this is just a method for the prototype
     displayLineInformation(line) {
-
         console.log(line);
         $('BODY').off('click', '#dismiss-data-'+line.id);
         $('BODY').off('click', '#add-data-'+line.id);
@@ -342,6 +349,5 @@ export default class DrawLine {
             $('BODY').off('click', '#dismiss-data-'+circle.id);
 
         })
-
     }
 }
