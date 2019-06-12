@@ -11,7 +11,8 @@ export default class DrawLine {
         this.activeLine = null;
         this.max = 99999;
         this.min = 99;
-
+        this.snapRange = 20;
+        this.ranges = [];
 
         this.pointArray = new Array();
         this.lineArray = new Array();
@@ -53,8 +54,33 @@ export default class DrawLine {
                 let pointer = this.canvas.getPointer(options.e);
                 this.activeLine.set({ x2: Math.floor(pointer.x), y2: Math.floor(pointer.y) });
                 this.canvas.renderAll();
+                this.snapDetection(pointer);
             }
         })
+    }
+
+    snapDetection(pointer) {
+        let combinedPoints = this.persistedPoints.concat(this.pointArray);
+        for(let x = 0; x<combinedPoints.length; x++) {
+            let point = combinedPoints[x];
+            let centerX = point.getCenterPoint().x;
+            let centerY = point.getCenterPoint().y;
+
+            let logString =  `x:  ${Math.abs(pointer.x - centerX)} - ${pointer.x}, y:  ${Math.abs(pointer.y - centerY)} - ${pointer.y}`;
+
+            let inSnapRange = (Math.abs(pointer.x - centerX) <= this.snapRange) ||
+                (Math.abs(pointer.y - centerY) <= this.snapRange);
+            let lineOrigin = (Math.abs(pointer.x - this.activeLine.x1) <= this.snapRange) ||
+                (Math.abs(pointer.y - this.activeLine.y1) <= this.snapRange);
+
+            if(inSnapRange && !lineOrigin) {
+                console.log('snap!');
+                console.log(logString);
+                this.activeLine.set('x2', centerX);
+                this.activeLine.set('y2', centerY);
+                break;
+            }
+        }
     }
 
     processDrawing() {
@@ -70,7 +96,6 @@ export default class DrawLine {
             }
         })
 
-        console.log(this.pointArray, this.lineArray);
 
         this.calculatePointLineIntersections();
 
@@ -122,34 +147,6 @@ export default class DrawLine {
         this.canvas.add(line);
         this.canvas.add(circle);
     }
-
-    //can be used for snapping functionality
-    // completeDrawing(options) {
-    //     let circleCenterPoint = options.target.getCenterPoint();
-    //     this.activeLine.set({
-    //         x2: circleCenterPoint.x,
-    //         y2: circleCenterPoint.y
-    //     });
-    //     this.lineArray.push(this.activeLine);
-    //
-    //     this.canvas.renderAll();
-    //     this.remove
-    //
-    //     this.pointArray.forEach((point) => {
-    //         this.persistedPoints.push(point);
-    //     });
-    //
-    //     this.lineArray.forEach((line) => {
-    //         this.persistedLines.push(line);
-    //     });
-    //
-    //     //clear for the next image
-    //     this.pointArray = [];
-    //     this.lineArray = [];
-    //
-    //     console.log(this.persistedPoints);
-    //     console.log(this.persistedLines);
-    // }
 
     makeCircle(options) {
         let random = Math.floor(Math.random() * (this.max - this.min + 1)) + this.min;
@@ -214,20 +211,6 @@ export default class DrawLine {
             let selectedLine = options.target;
             this.displayLineInformation(selectedLine);
         });
-
-        // line.on('selected', (options) => {
-        //     // let selectedLine = options.target;
-        //     // selectedLine.set('fill', 'red');
-        //     // selectedLine.set('stroke', 'red');
-        //     //console.log(options.selected[0]);
-        // });
-        //
-        // line.on('deselected', (options) => {
-        //     // console.log(options.deselected[0]);
-        //     // let selectedLine = options.target;
-        //     // selectedLine.set('fill', '#000000');
-        //     // selectedLine.set('stroke', '#000000');
-        // });
 
         return line;
     }
