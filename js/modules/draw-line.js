@@ -24,28 +24,14 @@ export default class DrawLine {
         $('#' + config.drawingControl).click(() => {
             this.drawingMode = !this.drawingMode;
             this.canvas.selection = !this.drawingMode;
-            (this.drawingMode == true) ? $('#drawing-status').html('(On)') :
-                $('#drawing-status').html('(Off)');
 
-            (this.drawingMode == true) ? canvasSelectionUtilities.disableObjectSelection(this.canvas)
-                : canvasSelectionUtilities.enableObjectSelection(this.canvas);
-
-            if(this.drawingMode == false) { //process the canvas
-                this.processDrawing();
-            }
+            (this.drawingMode == true) ?  this.setUpDrawingMode() :
+                this.tearDownDrawingMode();
         })
 
         this.canvas.on('mouse:down', (options) => {
             if(this.drawingMode) {
-                // if(options.target
-                //     && this.pointArray.length > 0
-                //     && options.target.id == this.pointArray[0].id
-                //     && options.target.class == 'point'){
-                //     this.completeDrawing(options);
-                // }
-                // else {
-                    this.addPoint(options);
-                // }
+                this.addPoint(options);
             }
         })
 
@@ -54,10 +40,24 @@ export default class DrawLine {
                 let pointer = this.canvas.getPointer(options.e);
                 this.activeLine.set({ x2: Math.floor(pointer.x), y2: Math.floor(pointer.y) });
                 this.canvas.renderAll();
-                this.snapDetection(pointer);
+                //this.snapDetection(pointer);
             }
         })
     }
+
+    setUpDrawingMode() {
+        $('#drawing-status').html('(On)')
+        canvasSelectionUtilities.disableObjectSelection(this.canvas)
+        $('CANVAS').css('cursor', 'cell');
+    }
+
+    tearDownDrawingMode() {
+        $('#drawing-status').html('(Off)')
+        canvasSelectionUtilities.enableObjectSelection(this.canvas);
+        $('CANVAS').css('cursor', 'pointer');
+        this.processDrawing();
+    }
+
 
     snapDetection(pointer) {
         let combinedPoints = this.persistedPoints.concat(this.pointArray);
@@ -78,7 +78,6 @@ export default class DrawLine {
                 console.log(logString);
                 this.activeLine.set('x2', centerX);
                 this.activeLine.set('y2', centerY);
-                break;
             }
         }
     }

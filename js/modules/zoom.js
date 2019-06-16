@@ -7,7 +7,8 @@ export default class Zoom {
     constructor(canvas, config) {
         this.ZOOM_MAX = config.zoomMax;
         this.SCALE_FACTOR = config.scaleFactor;
-        this.canvas = canvas
+        this.canvas = canvas;
+        this.canvasImage = null;
 
 
         //set up the elements
@@ -39,6 +40,15 @@ export default class Zoom {
 
 
             this.resetZoomCanvas();
+
+            return false;
+        })
+
+        $('#' + config.centerCanvasTrigger).click(() => {
+            this.zoomOut = false;
+            this.zoomIn = false;
+
+            this.centerCanvas();
 
             return false;
         })
@@ -75,5 +85,48 @@ export default class Zoom {
         this.canvas.setZoom(1);
 
         this.canvas.renderAll();
+    }
+
+
+    centerCanvas() {
+        //reset the canvas zoom
+        this.resetZoomCanvas();
+
+        //reset the pan if the canvas is panned
+        let canvasElements = $('.canvas-container canvas').toArray();
+        canvasElements.forEach((canvas) => {
+            $(canvas).css('top', 0);
+            $(canvas).css('left', 0);
+        });
+
+        let innerWidth = window.innerWidth;
+        let innerHeight = window.innerHeight;
+
+        //get the ratio of the canvas to the window
+        let widthRatio = (this.canvasImage.width / innerWidth);
+        let heightRatio = (this.canvasImage.height / innerHeight);
+        let ratio = null;
+        if (widthRatio > 1 &&  heightRatio > 1) { // image width and height are greater than the canvas
+            //take the larger ratio
+            ratio = (widthRatio > heightRatio) ? widthRatio : heightRatio;
+        }
+        else if (widthRatio > 1) {
+            ratio = widthRatio;
+        }
+        else if (heightRatio > 1) {
+            ratio = heightRatio;
+        }
+
+        //we have a ratio, zoom out to it, if the image fits the window, we don't need to center the canvas
+        if (ratio !== null) {
+            this.canvas.setZoom(this.canvas.getZoom() / ratio);
+            this.canvas.setHeight(this.canvas.getHeight() / ratio);
+            this.canvas.setWidth(this.canvas.getWidth() / ratio);
+            this.canvas.renderAll();
+        }
+    }
+
+    setCanvasImage(img){
+        this.canvasImage = img;
     }
 }
