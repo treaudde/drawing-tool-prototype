@@ -40,6 +40,7 @@ export default class DrawLine {
                 let pointer = this.canvas.getPointer(options.e);
                 this.activeLine.set({ x2: Math.floor(pointer.x), y2: Math.floor(pointer.y) });
                 this.canvas.renderAll();
+                this.calculateAngleLine(this.activeLine);
                 //this.snapDetection(pointer);
             }
         })
@@ -59,28 +60,28 @@ export default class DrawLine {
     }
 
 
-    snapDetection(pointer) {
-        let combinedPoints = this.persistedPoints.concat(this.pointArray);
-        for(let x = 0; x<combinedPoints.length; x++) {
-            let point = combinedPoints[x];
-            let centerX = point.getCenterPoint().x;
-            let centerY = point.getCenterPoint().y;
-
-            let logString =  `x:  ${Math.abs(pointer.x - centerX)} - ${pointer.x}, y:  ${Math.abs(pointer.y - centerY)} - ${pointer.y}`;
-
-            let inSnapRange = (Math.abs(pointer.x - centerX) <= this.snapRange) ||
-                (Math.abs(pointer.y - centerY) <= this.snapRange);
-            let lineOrigin = (Math.abs(pointer.x - this.activeLine.x1) <= this.snapRange) ||
-                (Math.abs(pointer.y - this.activeLine.y1) <= this.snapRange);
-
-            if(inSnapRange && !lineOrigin) {
-                console.log('snap!');
-                console.log(logString);
-                this.activeLine.set('x2', centerX);
-                this.activeLine.set('y2', centerY);
-            }
-        }
-    }
+    // snapDetection(pointer) {
+    //     let combinedPoints = this.persistedPoints.concat(this.pointArray);
+    //     for(let x = 0; x<combinedPoints.length; x++) {
+    //         let point = combinedPoints[x];
+    //         let centerX = point.getCenterPoint().x;
+    //         let centerY = point.getCenterPoint().y;
+    //
+    //         let logString =  `x:  ${Math.abs(pointer.x - centerX)} - ${pointer.x}, y:  ${Math.abs(pointer.y - centerY)} - ${pointer.y}`;
+    //
+    //         let inSnapRange = (Math.abs(pointer.x - centerX) <= this.snapRange) ||
+    //             (Math.abs(pointer.y - centerY) <= this.snapRange);
+    //         let lineOrigin = (Math.abs(pointer.x - this.activeLine.x1) <= this.snapRange) ||
+    //             (Math.abs(pointer.y - this.activeLine.y1) <= this.snapRange);
+    //
+    //         if(inSnapRange && !lineOrigin) {
+    //             console.log('snap!');
+    //             console.log(logString);
+    //             this.activeLine.set('x2', centerX);
+    //             this.activeLine.set('y2', centerY);
+    //         }
+    //     }
+    // }
 
     processDrawing() {
         this.canvas.remove(this.activeLine);
@@ -114,21 +115,37 @@ export default class DrawLine {
             point.set('lineX1Y1', null);
             point.set('lineX2Y2', null);
 
+            let inRange = (number, min, max) => {
+                return ((number - min) * (number - max) <= 0);
+            }
+
+
             //get the center point of the circle as it corresponds to one end a line
             let centerPoint = point.getCenterPoint();
             for (let x = 0; x<this.persistedLines.length; x++) {
                 let line = this.persistedLines[x];
 
+                let maxValueX = centerPoint.x + 10;
+                let minValueX = centerPoint.x - 10;
+
+                let maxValueY = centerPoint.y + 10;
+                let minValueY = centerPoint.y - 10;
+
                 if(this.activeLine !== null && line.id === this.activeLine.id) {
                     this.persistedLines.splice(x,1);
                     continue;
                 }
-                if (line.x1 == centerPoint.x && line.y1 == centerPoint.y) {
+
+                if (inRange(line.x1, minValueX, maxValueX) && inRange(line.y1, minValueY, maxValueY)) {
                     point.set('lineX1Y1', line);
+                    line.set('x1', centerPoint.x);
+                    line.set('y1', centerPoint.y);
                 }
 
-                if (line.x2 == centerPoint.x && line.y2 == centerPoint.y) {
+                if (inRange(line.x2, minValueX, maxValueX) && inRange(line.y2, minValueY, maxValueY)) {
                     point.set('lineX2Y2', line);
+                    line.set('x2', centerPoint.x);
+                    line.set('y2', centerPoint.y);
                 }
             }
         });
@@ -331,5 +348,74 @@ export default class DrawLine {
             $('BODY').off('click', '#dismiss-data-'+circle.id);
 
         })
+    }
+
+
+    calculateAngleCircle(point) {
+        if(point.lineX1Y1 !== null && point.lineX2Y2 !== null) { // moving cir
+            let angle = this._calculateAngle(point.lineX1Y1, point.lineX2Y2)
+
+            if(Math.floor(angle) == 90) {
+                point.lineX1Y1.set('fill', 'green');
+                point.lineX2Y2.set('fill', 'green');
+
+                point.lineX1Y1.set('stroke', 'green');
+                point.lineX2Y2.set('stroke', 'green');
+            } else {
+                point.lineX1Y1.set('fill', 'black');
+                point.lineX2Y2.set('fill', 'black');
+
+                point.lineX1Y1.set('stroke', 'black');
+                point.lineX2Y2.set('stroke', 'black');
+            }
+        }
+    }
+
+    calculateAngleLine(line) {
+        if(this.activeLine && this.lineArray.length > 1) {
+            //get the last active line
+            let lastLine = this.lineArray[this.lineArray.length -2];
+
+            let angle = this._calculateAngle(line, lastLine);
+
+            if(Math.floor(angle) == 90) {
+                lastLine.set('fill', 'green');
+                this.activeLine.set('fill', 'green');
+
+                lastLine.set('stroke', 'green');
+                this.activeLine.set('stroke', 'green');
+            } else {
+                lastLine.set('fill', 'black');
+                this.activeLine.set('fill', 'black');
+
+                lastLine.set('stroke', 'black');
+                this.activeLine.set('stroke', 'black');
+            }
+        }
+    }
+
+
+    _calculateAngle(line1, line2) {
+        let y21 = line1.get('y1');
+        let y22 = line1.get('y2');
+        let y11 = line2.get('y1');
+        let y12 = line2.get('y2');
+
+        let x21 = line1.get('x1');
+        let x22 = line1.get('x2');
+        let x11 = line2.get('x1');
+        let x12 = line2.get('x2');
+
+        let angle1 = Math.atan2(y11 - y12, x11 - x12);
+        let angle2 = Math.atan2(y21 - y22, x21 - x22);
+
+        let angle = angle1 - angle2;
+        angle = angle * 180 / Math.PI;
+        if (angle < 0)
+            angle = -angle;
+        if (360 - angle < angle)
+            angle = 360 - angle;
+
+        return angle;
     }
 }

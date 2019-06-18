@@ -27,6 +27,7 @@ export default class MovePoint {
 
             point.on('moving', (options) => {
                 this.movePoint(options.target)
+                this.drawingObject.calculateAngleCircle(options.target)
             });
         })
     }
