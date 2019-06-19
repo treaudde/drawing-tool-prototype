@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="build/app.js"></script>
+    <link type="text/css" href="css/normalize.css" media="all"  rel="stylesheet" />
 
     <style type="text/css">
         html, body {
@@ -16,30 +17,42 @@
         }
 
         #menu {
-            height:200px;
             background-color: #dcdad0;
-            overflow:scroll;
+            /*overflow:scroll;*/
             z-index:200;
-            position:absolute
+            position:fixed;
         }
 
+        #canvas {
+            position: relative;
+            z-index:100;
+        }
+
+        p{
+            margin:0;
+        }
     </style>
 </head>
 <body>
-<div id="menu">
-    <p>
-        <a href="#" id="zoom-in">Zoom In</a>
-        <a href="#" id="zoom-out">Zoom Out</a>
-        <a href="#" id="reset-zoom">Reset Zoom</a>
-        <a href="#" id="center-canvas">Center Canvas</a>
-        <a href="#" id="pan-mode">Pan <span id="pan-status">(Off)</span></a>
-        <a href="#" id="drawing-mode">Drawing Mode <span id="drawing-status">(Off)</span></a>
-        <a href="#" id="point-mode">Edit Point Mode <span id="point-status">(Off)</span></a>
-    </p>
-    <hr />
-    <span id="information"></span>
-</div>
-<canvas id="c"></canvas>
+    <div class="container">
+        <div id="menu">
+            <p>
+                <a href="#" id="zoom-in">Zoom In</a>
+                <a href="#" id="zoom-out">Zoom Out</a>
+                <a href="#" id="reset-zoom">Reset Zoom</a>
+                <a href="#" id="center-canvas">Center Canvas</a>
+                <a href="#" id="pan-mode">Pan <span id="pan-status">(Off)</span></a>
+                <a href="#" id="drawing-mode">Drawing Mode <span id="drawing-status">(Off)</span></a>
+                <a href="#" id="point-mode">Edit Point Mode <span id="point-status">(Off)</span></a>
+            </p>
+            <hr />
+            <span id="information"></span>
+        </div>
+
+        <div id="canvas">
+            <canvas id="c"></canvas>
+        </div>
+    </div>
 
 </body>
 </html>
