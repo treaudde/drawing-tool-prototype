@@ -23,8 +23,7 @@ let initDrawingToolPrototype = () => {
     setInterval(() => {
         zoomObject.zoomInCanvas();
         zoomObject.zoomOutCanvas();
-    }, 15000)
-
+    }, 10000)
 
     //set up Pan
     const panObject = new Pan(canvas, {panControl: 'pan-mode'});
